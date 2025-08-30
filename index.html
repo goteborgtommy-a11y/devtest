@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Trädspecialisterna – CRM, Offert & Jobbplanering</title>
+
+  <!-- OneSignal SDK -->
+  <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
+  <script>
+    window.OneSignal = window.OneSignal || [];
+    OneSignal.push(function() {
+      OneSignal.init({
+        appId: "DIN-ONESIGNAL-APP-ID-HÄR",   // ← KLIPP IN DITT APP ID
+        notifyButton: { enable: true }
+      });
+    });
+  </script>
+
+  <style>
+    :root{
+      --bg:#070a13; --surface:#0c1424; --line:#20305a; --text:#edf2ff; --dim:#9fb0d6;
+      --accent1:#60a5fa; --accent2:#67e8f9;
+    }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      background: var(--surface);
+      padding: 16px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .sidebar {
+      float: left;
+      width: 220px;
+      padding: 10px;
+      background: #0b162d;
+      height: 100vh;
+    }
+    .sidebar button {
+      display: block;
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 10px;
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--text);
+      cursor: pointer;
+    }
+    .sidebar button.active {
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      color: #000;
+    }
+    main {
+      margin-left: 240px;
+      padding: 20px;
+    }
+    .card {
+      background: #0f1a33;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    input, select, textarea, button.primary {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      margin: 5px 0;
+    }
+    button.primary {
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      color: #000;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+    .hide { display: none; }
+  </style>
+</head>
+<body>
+  <header>
+    Trädspecialisterna – Internt CRM • Offert • Jobbplanering
+  </header>
+
+  <div class="sidebar">
+    <button class="active" onclick="openSection('dashboard', this)">🏠 Översikt</button>
+    <button onclick="openSection('newCustomer', this)">➕ Ny kund</button>
+    <button onclick="openSection('customers', this)">📇 Kundregister</button>
+    <button onclick="openSection('jobs', this)">🗂️ Jobb</button>
+    <button onclick="openSection('offers', this)">📧 Offert</button>
+  </div>
+
+  <main>
+    <section id="dashboard" class="card">
+      <h2>Översikt</h2>
+      <p>Här ser du statistik och status för alla jobb.</p>
+      <button class="primary" onclick="testNotification()">🔔 Testa pushnotis</button>
+    </section>
+
+    <section id="newCustomer" class="card hide">
+      <h2>Ny kund</h2>
+      <input id="c_name" placeholder="Kundens namn">
+      <input id="c_email" placeholder="E-post">
+      <input id="c_phone" placeholder="Telefon">
+      <textarea id="c_notes" placeholder="Anteckningar"></textarea>
+      <button class="primary" onclick="saveCustomer()">Spara kund</button>
+    </section>
+
+    <section id="customers" class="card hide">
+      <h2>Kundregister</h2>
+      <div id="customerList"></div>
+    </section>
+
+    <section id="jobs" class="card hide">
+      <h2>Jobb</h2>
+      <p>Här kommer jobb att listas.</p>
+    </section>
+
+    <section id="offers" class="card hide">
+      <h2>Offert</h2>
+      <p>Här skickar du offert till kunder.</p>
+    </section>
+  </main>
+
+  <script>
+    // Enkel state för kunder
+    let customers = JSON.parse(localStorage.getItem("crm_customers") || "[]");
+
+    function openSection(id, btn) {
+      document.querySelectorAll("main section").forEach(s => s.classList.add("hide"));
+      document.getElementById(id).classList.remove("hide");
+      document.querySelectorAll(".sidebar button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+    }
+
+    function saveCustomer() {
+      const c = {
+        name: document.getElementById("c_name").value,
+        email: document.getElementById("c_email").value,
+        phone: document.getElementById("c_phone").value,
+        notes: document.getElementById("c_notes").value
+      };
+      customers.push(c);
+      localStorage.setItem("crm_customers", JSON.stringify(customers));
+      renderCustomers();
+      alert("Kund sparad!");
+    }
+
+    function renderCustomers() {
+      const list = document.getElementById("customerList");
+      list.innerHTML = "";
+      customers.forEach(c => {
+        const div = document.createElement("div");
+        div.innerHTML = `<strong>${c.name}</strong> – ${c.email} – ${c.phone}<br><em>${c.notes}</em><hr>`;
+        list.appendChild(div);
+      });
+    }
+
+    function testNotification() {
+      OneSignal.push(function() {
+        OneSignal.sendSelfNotification(
+          "Pushnotis fungerar 🎉",
+          "Din OneSignal-integration är aktiv.",
+          window.location.href,
+          "https://img.icons8.com/fluency/96/ok.png"
+        );
+      });
+    }
+
+    // Render vid start
+    renderCustomers();
+  </script>
+</body>
+</html>
