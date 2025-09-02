@@ -1,691 +1,388 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Trädspecialisterna – CRM, Offert & Jobbplanering</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- OneSignal SDK (fyll i App ID i scriptet under) -->
-  <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
-  <script>
-    // Fyll i ditt OneSignal App ID:
-    const ONESIGNAL_APP_ID = "DIN_ONESIGNAL_APP_ID";
-    window.OneSignal = window.OneSignal || [];
-    OneSignal.push(function () {
-      OneSignal.init({
-        appId: ONESIGNAL_APP_ID,
-        notifyButton: { enable: true } // liten klock-ikon nere i hörnet
-      });
-    });
-  </script>
-
-  <style>
-    :root{
-      --bg:#070a13; --surface:#0c1424; --elev:#101a31; --line:#20305a; --text:#edf2ff; --dim:#9fb0d6;
-      --accent1:#60a5fa; --accent2:#67e8f9; --ok:#22c55e; --warn:#f59e0b; --danger:#ef4444;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; color:var(--text); font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background: radial-gradient(1200px 600px at 90% -10%, rgba(96,165,250,.12), transparent),
-                  radial-gradient(900px 600px at -10% 110%, rgba(103,232,249,.12), transparent),
-                  var(--bg);
-    }
-    .hide{display:none !important}
-    .container{max-width:1240px;margin:0 auto;padding:12px 16px 24px}
-    .header{display:flex;align-items:center;gap:10px;justify-content:space-between}
-    .brand{display:flex;align-items:center;gap:10px}
-    .burger{display:none; padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#0b162d;color:#cfe1ff;cursor:pointer}
-    .logo{font-weight:800;letter-spacing:.2px}
-    .logo small{display:block;font-weight:600;color:#b8c7ee}
-    .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .card{background:linear-gradient(145deg,#0e1730 0%,#0a1426 100%);border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
-    .pad{padding:18px}
-    label{font-size:12px;color:var(--dim);display:block;margin:6px 0}
-    input,select,textarea,button{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:#0b162d;color:var(--text)}
-    input::placeholder,textarea::placeholder{color:#7f8bb0}
-    .btn{cursor:pointer;transition:transform .06s ease, box-shadow .2s ease}
-    .btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(0,0,0,.25)}
-    .btn.primary{background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#06101f;border:none;font-weight:800}
-    .btn.ghost{background:transparent;border:1px dashed var(--line)}
-    .grid{display:grid;gap:16px}
-    .grid-2{grid-template-columns:260px 1fr}
-    @media (max-width: 1100px){.grid-2{grid-template-columns:1fr}}
-    .sidebar{position:sticky;top:16px;height:calc(100vh - 32px);padding:14px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,#0a1426,#081225)}
-    .nav button{display:flex;gap:10px;align-items:center;width:100%;background:transparent;border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:10px;color:#d7e7ff}
-    .nav button.active{background:linear-gradient(135deg, rgba(96,165,250,.25), rgba(103,232,249,.2));color:#041226}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    .col{flex:1 1 280px}
-    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#0b162d;border:1px solid var(--line);font-size:12px;color:#cfe1ff}
-    .badge{border:1px solid var(--line);padding:2px 8px;border-radius:999px;font-size:11px;color:#cfe1ff}
-    .list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
-    .item{border:1px solid var(--line);border-radius:14px;padding:12px;background:#0f1a33}
-    .item h4{margin:0 0 6px 0}
-    .muted{color:var(--dim);font-size:12px}
-    .right{text-align:right}
-    .table{width:100%;border-collapse:collapse}
-    .table th,.table td{padding:10px;border-bottom:1px solid var(--line);text-align:left}
-
-    /* Kanban */
-    .kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-    @media (max-width: 1100px){.kanban{grid-template-columns:1fr 1fr}}
-    @media (max-width: 680px){.kanban{grid-template-columns:1fr}}
-    .colK{background:#0b162d;border:1px solid var(--line);border-radius:14px;min-height:240px}
-    .colK header{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid var(--line)}
-    .colK .body{padding:12px;display:grid;gap:10px;min-height:160px}
-    .ticket{padding:10px;border-radius:12px;background:#0f1a33;border:1px solid var(--line);cursor:grab}
-    .ticket:active{cursor:grabbing}
-    .dropping{outline:2px dashed var(--accent1);outline-offset:-6px}
-    .status{padding:4px 8px;border-radius:999px;border:1px solid var(--line);font-size:12px}
-
-    /* Prices list */
-    .prices{display:grid;gap:8px}
-    .price-row{display:grid;grid-template-columns:1fr 140px 40px;gap:8px}
-    .price-total{display:flex;justify-content:flex-end;gap:12px;align-items:center}
-
-    /* Modal */
-    .modal{position:fixed;inset:0;background:rgba(2,8,20,.7);display:flex;align-items:center;justify-content:center;padding:20px}
-    .modal .box{max-width:840px;width:100%;background:#0b1427;border:1px solid var(--line);border-radius:18px}
-
-    /* Map */
-    #map{height:560px;border-radius:16px;border:1px solid var(--line)}
-    .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, monospace;font-size:12px;padding:2px 6px;border:1px solid var(--line);border-radius:8px;background:#0b162d}
-
-    /* Mobil: visa endast aktiv sektion och använd hamburgare */
-    @media (max-width: 768px){
-      .grid-2{display:block}
-      .burger{display:inline-flex}
-      .drawer{position:fixed;inset:0 30% 0 0; max-width: 82vw; background:#081225; border-right:1px solid var(--line); padding:16px; transform:translateX(-100%); transition:transform .2s ease; z-index:40;}
-      .drawer.open{transform:translateX(0)}
-      .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:30}
-      main.grid{position:relative}
-      main.grid>section{display:none;position:relative}
-      main.grid>section.active{display:block}
-    }
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lösenord & kort — lokalt valv</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  :root{
+    --bg:#111315; --card:#1a1d21; --press:#171a1d;
+    --text:#eef2f6; --muted:#aeb6bf; --accent:#ffd54f; --focus:#5bb0ff;
+    --border:#2a2f36; --shadow:0 10px 25px rgba(0,0,0,.35),0 2px 6px rgba(0,0,0,.3);
+    --err:#ff8a8a;
+  }
+  html,body{height:100%}
+  body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+  .gate{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#0f1113,#14171a);z-index:9999}
+  .panel{width:min(520px,94vw);background:#161a1f;border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);padding:20px}
+  .panel h1{margin:4px 0 10px;font-size:22px}
+  .muted{color:var(--muted);font-size:13px}
+  .label{font-weight:600;margin-top:10px}
+  .field{display:flex;gap:8px;margin:8px 0}
+  .field input,.field textarea{flex:1;background:#0f1215;border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px;font-size:15px}
+  .field input.error{border-color:#7a2a2a; box-shadow:0 0 0 3px rgba(255,138,138,.12)}
+  .errline{display:none;color:var(--err);font-size:13px;margin-top:8px}
+  .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:10px}
+  .btn{display:inline-flex;align-items:center;gap:8px;background:#1a1d21;border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:12px;cursor:pointer;user-select:none;transition:.15s;box-shadow:var(--shadow);font-weight:600}
+  .btn:hover{transform:translateY(-1px)} .btn:active{transform:translateY(0);background:var(--press)}
+  .btn-accent{border-color:#7a5f00;background:linear-gradient(180deg,#1e1a12,#17140e);color:#ffd54f}
+  .pill{background:#20242a;border:1px solid var(--border);padding:8px 10px;border-radius:10px;font-size:13px;cursor:pointer}
+  .app{max-width:1100px;margin:0 auto;padding:16px 16px 96px}
+  .topbar{position:sticky;top:0;z-index:50;background:linear-gradient(180deg,rgba(17,19,21,.95) 60%,rgba(17,19,21,0));backdrop-filter:blur(8px);padding:12px 16px 10px;margin:0 -16px 12px;border-bottom:1px solid var(--border)}
+  .headline{display:flex;gap:12px;align-items:center}
+  .dot{width:18px;height:18px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(255,213,79,.12)}
+  .title{font-size:22px;font-weight:700}
+  .subtitle{color:var(--muted);font-size:13px}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .search{flex:1 1 360px;display:flex;align-items:center;gap:8px;background:#1a1d21;border:1px solid var(--border);border-radius:999px;padding:10px 14px}
+  .search input{background:transparent;border:0;outline:none;color:var(--text);width:100%;font-size:15px}
+  .grid{display:grid;grid-template-columns:repeat(1,minmax(0,1fr));gap:12px;margin-top:14px}
+  @media(min-width:680px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(min-width:1024px){.grid{grid-template-columns:repeat(3,1fr)}}
+  .card{background:#1a1d21;border:1px solid var(--border);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+  .card-head{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+  .favicon{width:22px;height:22px;border-radius:6px;background:#2a2f36;object-fit:cover}
+  .badge{margin-left:auto;background:#23272d;border:1px solid var(--border);padding:2px 8px;border-radius:999px;font-size:12px;color:#aeb6bf}
+  .kv{display:grid;grid-template-columns:110px 1fr;gap:6px 10px;font-size:14px;margin:8px 0 12px}
+  .kv .k{color:#aeb6bf}
+  .kv .v{min-width:0;overflow-wrap:anywhere;word-break:break-word}
+  .kv input,.kv textarea{width:100%;max-width:100%;background:#14171a;border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 10px;font-size:14px}
+  .row-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .empty{text-align:center;padding:36px;border:1px dashed var(--border);border-radius:14px;color:#aeb6bf}
+  .footer{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);color:#8c96a3;font-size:12px;opacity:.75}
+</style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <div class="brand">
-        <button id="burger" class="burger" aria-label="Meny" onclick="toggleDrawer()">☰</button>
-        <div class="logo">Trädspecialisterna <small>Internt CRM • Offert • Jobbplanering</small></div>
-      </div>
-      <div class="toolbar">
-        <!-- Global sök: påverkar alla vyer -->
-        <input id="globalSearch" placeholder="Sök (namn, tel, personnummer, adress, e-post)" oninput="syncGlobalSearch()" style="min-width:260px">
-        <span class="pill">Användare: <span id="userEmailTop">—</span></span>
+
+<!-- GATE -->
+<div id="gate" class="gate" aria-live="polite">
+  <div class="panel">
+    <h1 id="gateTitle">Nytt huvudlösenord</h1>
+    <div id="gateDesc" class="muted">Välj ett huvudlösenord. Det krävs för att öppna valvet i framtiden.</div>
+
+    <!-- Onboarding steg 1 -->
+    <div id="onb">
+      <div class="label">Lösenord <span class="muted">(minst 8 tecken)</span></div>
+      <div class="field"><input id="mp1" type="password" placeholder="Minst 8 tecken" autocomplete="new-password"></div>
+      <div class="label">Bekräfta lösenord</div>
+      <div class="field"><input id="mp2" type="password" placeholder="Repetera lösenord" autocomplete="new-password"></div>
+      <div class="label">Återställnings-e-post</div>
+      <div class="field"><input id="mpEmail" type="email" placeholder="namn@exempel.se" autocomplete="email"></div>
+    </div>
+
+    <!-- Onboarding steg 2: återställningsnyckel -->
+    <div id="recoveryStep" style="display:none">
+      <div class="muted">Spara din <b>återställningsnyckel</b> (krävs om du glömmer lösenordet):</div>
+      <div id="recoveryKey" style="margin:8px 0;padding:10px;border:1px dashed #39424d;border-radius:10px;word-break:break-word;font-family:ui-monospace,Menlo,monospace"></div>
+      <div class="row" style="justify-content:flex-start">
+        <span class="pill" id="copyKey">Kopiera</span>
+        <span class="pill" id="downloadKey">Ladda ned</span>
+        <span class="pill" id="emailKey">Maila nyckel</span>
       </div>
     </div>
 
-    <!-- AUTH / LANDNING – login först -->
-    <section id="authCard" class="card pad" style="margin-top:12px">
-      <div class="row">
-        <div class="col" style="min-width:320px">
-          <h2 style="margin:0 0 6px 0">Logga in</h2>
-          <p class="muted">Demo lagrar data lokalt (LocalStorage). I produktion: backend + databas + JWT.</p>
-          <label>E-post</label>
-          <input id="email" type="email" placeholder="namn@tradspecialisterna.se" />
-          <label>Lösenord</label>
-          <input id="password" type="password" placeholder="••••••••" />
-          <div class="toolbar" style="margin-top:12px">
-            <button class="btn primary" onclick="authLogin()">Logga in</button>
-            <button class="btn" onclick="authRegister()">Registrera</button>
-          </div>
-        </div>
-        <div class="col" style="display:grid;place-items:center">
-          <div style="padding:20px;border:1px solid var(--line);border-radius:16px">
-            <div class="toolbar">
-              <span class="badge">Kundregister</span>
-              <span class="badge">Offert via e-post</span>
-              <span class="badge">Kartvy</span>
-              <span class="badge">Kanban drag-&-drop</span>
-            </div>
-            <p class="muted" style="margin-top:10px">Modern, snabb och responsiv CRM-prototyp anpassad för arboristjobb.</p>
-          </div>
-        </div>
-      </div>
-    </section>
+    <!-- Login -->
+    <div id="login" style="display:none">
+      <div class="label">Huvudlösenord</div>
+      <div class="field"><input id="mp" type="password" placeholder="Skriv ditt huvudlösenord" autocomplete="current-password"></div>
+      <div class="row" style="justify-content:flex-start"><a href="#" id="forgotBtn" class="muted">Glömt lösenord?</a></div>
+    </div>
 
-    <!-- APP -->
-    <section id="app" class="grid grid-2 hide" style="margin-top:12px">
-      <!-- Sidebar / Drawer -->
-      <aside id="sidebar" class="sidebar drawer">
-        <div class="toolbar" style="justify-content:space-between">
-          <span class="pill">Användare: <span id="userEmail"></span></span>
-          <button class="btn" onclick="logout()">Logga ut</button>
-        </div>
-        <div class="nav" style="margin-top:14px">
-          <button id="navDashboard" class="active" onclick="openSection('dashboard', this)">🏠 Översikt</button>
-          <button onclick="openSection('newCustomer', this)">➕ Ny kund</button>
-          <button onclick="openSection('customers', this)">📇 Kundregister</button>
-          <button onclick="openSection('jobs', this)">🗂️ Jobb</button>
-          <button onclick="openSection('mapview', this); initMapOnce()">🗺️ Kartvy</button>
-          <button onclick="openSection('offers', this)">📧 Offert</button>
-        </div>
-      </aside>
+    <!-- Återställ -->
+    <div id="resetForm" style="display:none;margin-top:10px">
+      <div class="muted" style="margin-bottom:6px">Återställ med e-post + återställningsnyckel.</div>
+      <div class="label">E-post</div><div class="field"><input id="resetEmail" type="email"></div>
+      <div class="label">Återställningsnyckel</div><div class="field"><textarea id="resetKey" rows="3"></textarea></div>
+      <div class="label">Nytt lösenord (minst 8)</div><div class="field"><input id="resetNew1" type="password"></div>
+      <div class="label">Bekräfta nytt lösenord</div><div class="field"><input id="resetNew2" type="password"></div>
+      <div class="row"><button class="btn" id="cancelReset">Avbryt</button><button class="btn btn-accent" id="applyReset">Återställ</button></div>
+    </div>
 
-      <main class="grid" style="gap:16px">
-        <!-- DASHBOARD -->
-        <section id="dashboard" class="card pad active">
-          <div class="row" style="align-items:center;justify-content:space-between">
-            <h2 style="margin:0">Översikt</h2>
-            <div class="toolbar">
-              <input id="search" placeholder="Sök (synkas med fältet i toppen)…" oninput="renderAll()" style="width:260px" />
-              <select id="filterStatus" onchange="renderAll()">
-                <option value="">Alla status</option>
-                <option>Inkomna</option>
-                <option>Fått pris</option>
-                <option>Pågående</option>
-                <option>Klara</option>
-              </select>
-              <span class="pill">Totalt: <span id="statsTotal">0</span></span>
-              <span class="pill">Offert skickad: <span id="statsQuoted">0</span></span>
-            </div>
-          </div>
-          <div class="kanban" style="margin-top:12px">
-            <div class="colK" ondragover="allowDrop(event)" ondrop="dropOnCol(event, 'Inkomna')">
-              <header><strong>Inkomna</strong><span class="pill" id="count-Inkomna">0</span></header>
-              <div class="body" id="col-Inkomna"></div>
-            </div>
-            <div class="colK" ondragover="allowDrop(event)" ondrop="dropOnCol(event, 'Fått pris')">
-              <header><strong>Fått pris</strong><span class="pill" id="count-Fått pris">0</span></header>
-              <div class="body" id="col-Fått pris"></div>
-            </div>
-            <div class="colK" ondragover="allowDrop(event)" ondrop="dropOnCol(event, 'Pågående')">
-              <header><strong>Pågående</strong><span class="pill" id="count-Pågående">0</span></header>
-              <div class="body" id="col-Pågående"></div>
-            </div>
-            <div class="colK" ondragover="allowDrop(event)" ondrop="dropOnCol(event, 'Klara')">
-              <header><strong>Klara</strong><span class="pill" id="count-Klara">0</span></header>
-              <div class="body" id="col-Klara"></div>
-            </div>
-          </div>
-        </section>
-
-        <!-- NEW CUSTOMER -->
-        <section id="newCustomer" class="card pad hide">
-          <h2 style="margin:0 0 6px 0">Ny kund</h2>
-          <p class="muted">Adressfältet använder Google Places Autocomplete och är begränsat till Sverige.</p>
-          <div class="row">
-            <div class="col">
-              <label>Namn</label>
-              <input id="c_name" placeholder="Kundens namn" />
-            </div>
-            <div class="col">
-              <label>Personnummer (valfritt)</label>
-              <input id="c_ssn" placeholder="ÅÅÅÅMMDD-XXXX" />
-            </div>
-          </div>
-          <div class="row">
-            <div class="col">
-              <label>E-post</label>
-              <input id="c_email" type="email" placeholder="kund@mail.se" />
-            </div>
-            <div class="col">
-              <label>Telefon</label>
-              <input id="c_phone" placeholder="070-000 00 00" />
-            </div>
-          </div>
-          <div class="row">
-            <div class="col">
-              <label>Adress</label>
-              <input id="c_address" placeholder="Skriv adress…" />
-              <small class="muted">Koordinater hämtas automatiskt.</small>
-            </div>
-            <div class="col">
-              <label>Jobbstatus</label>
-              <select id="c_status">
-                <option>Inkomna</option>
-                <option>Fått pris</option>
-                <option>Pågående</option>
-                <option>Klara</option>
-              </select>
-            </div>
-          </div>
-
-          <div style="margin-top:8px">
-            <label>Prisrader</label>
-            <div id="prices" class="prices"></div>
-            <div class="row">
-              <div class="col"><input id="p_desc" placeholder="Beskrivning (t.ex. Trädfällning)" /></div>
-              <div class="col"><input id="p_amount" type="number" placeholder="Belopp (SEK)" /></div>
-              <div style="width:80px"><button class="btn" onclick="addPriceRow()">Lägg till</button></div>
-            </div>
-            <div class="price-total" style="margin-top:6px"><span class="muted">Summa:</span> <strong id="priceSum">0 kr</strong></div>
-          </div>
-
-          <div class="row" style="margin-top:10px">
-            <div class="col">
-              <label>Offert skickad?</label>
-              <select id="c_quote_sent"><option>Nej</option><option>Ja</option></select>
-            </div>
-            <div class="col">
-              <label>Anteckningar</label>
-              <textarea id="c_notes" rows="3" placeholder="Trädtyp, åtkomst, riskzoner, önskemål…"></textarea>
-            </div>
-          </div>
-
-          <div class="toolbar" style="margin-top:10px">
-            <button class="btn primary" onclick="saveCustomer()">Spara kund</button>
-            <button class="btn ghost" onclick="clearCustomerForm()">Rensa</button>
-          </div>
-        </section>
-
-        <!-- CUSTOMERS -->
-        <section id="customers" class="card pad hide">
-          <div id="customerList" class="list"></div>
-        </section>
-
-        <!-- JOBS -->
-        <section id="jobs" class="card pad hide">
-          <h2 style="margin:0 0 6px 0">Jobbregister</h2>
-          <p class="muted">Visar kunder där pris är satt eller jobb pågår/klart. Använd sök/filtrering.</p>
-          <table class="table" id="jobTable">
-            <thead>
-              <tr>
-                <th>Namn</th>
-                <th>Adress</th>
-                <th>Status</th>
-                <th>Offert</th>
-                <th class="right">Summa</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </section>
-
-        <!-- MAP -->
-        <section id="mapview" class="card pad hide">
-          <div class="row" style="align-items:flex-end">
-            <div class="col">
-              <label>Filtrera status i kartan</label>
-              <select id="mapFilter" onchange="plotMarkers()">
-                <option value="">Alla</option>
-                <option>Inkomna</option>
-                <option>Fått pris</option>
-                <option>Pågående</option>
-                <option>Klara</option>
-              </select>
-            </div>
-            <div class="col"><span class="muted">Tips: <span class="kbd">⌘/Ctrl</span> + scroll för zoom.</span></div>
-          </div>
-          <div id="map" style="margin-top:12px"></div>
-        </section>
-
-        <!-- OFFERS -->
-        <section id="offers" class="card pad hide">
-          <h2 style="margin:0 0 6px 0">Skicka offert</h2>
-          <div class="row">
-            <div class="col">
-              <label>Välj kund</label>
-              <select id="offerCustomer" onchange="prefillOffer()"></select>
-            </div>
-            <div class="col">
-              <label>Ämne</label>
-              <input id="offerSubject" placeholder="Offert – Arbete på [adress]" />
-            </div>
-          </div>
-          <div class="row">
-            <div class="col">
-              <label>Meddelande</label>
-              <textarea id="offerBody" rows="10" placeholder="Hej [Namn]
-
-Tack för förfrågan. Här kommer vår offert...
-
-Pris: [summa] SEK
-Giltig t.o.m. [datum]
-
-Vänligen,
-Trädspecialisterna"></textarea>
-            </div>
-          </div>
-          <div class="toolbar" style="margin-top:10px">
-            <button class="btn" onclick="markQuoteSent()">Markera som skickad</button>
-            <button class="btn primary" onclick="composeMailto()">Skicka spårbar offert (mailto-backup)</button>
-          </div>
-          <p class="muted" style="margin-top:6px">OBS: För full spårning (accept/nej via länk + push) behövs backend-URL:er. Denna knapp använder e-postklienten med länkar i brödtexten.</p>
-        </section>
-      </main>
-    </section>
+    <div id="err" class="errline"></div>
+    <div class="row">
+      <button class="btn btn-accent" id="primaryBtn" type="button">Skapa valv</button>
+      <a href="#" id="factoryReset" class="muted" style="margin-left:auto">Återställ appen</a>
+    </div>
   </div>
+</div>
 
-  <!-- EDIT MODAL -->
-  <div id="editModal" class="modal hide">
-    <div class="box pad">
-      <div class="row" style="align-items:center;justify-content:space-between">
-        <h3 style="margin:0">Redigera kund</h3>
-        <button class="btn" onclick="closeEdit()">Stäng</button>
+<!-- APP -->
+<div class="app" id="app" aria-hidden="true">
+  <div class="topbar">
+    <div class="headline">
+      <div class="dot"></div>
+      <div>
+        <div class="title">Lösenord & kort</div>
+        <div class="subtitle">Krypterat lokalt i din webbläsare</div>
       </div>
-      <div class="row">
-        <div class="col"><label>Namn</label><input id="e_name"></div>
-        <div class="col"><label>Personnummer</label><input id="e_ssn"></div>
-      </div>
-      <div class="row">
-        <div class="col"><label>E-post</label><input id="e_email"></div>
-        <div class="col"><label>Telefon</label><input id="e_phone"></div>
-      </div>
-      <div class="row">
-        <div class="col"><label>Adress</label><input id="e_address"></div>
-        <div class="col"><label>Status</label>
-          <select id="e_status"><option>Inkomna</option><option>Fått pris</option><option>Pågående</option><option>Klara</option></select>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col"><label>Offert skickad?</label><select id="e_quote_sent"><option>Nej</option><option>Ja</option></select></div>
-        <div class="col"><label>Anteckningar</label><textarea id="e_notes" rows="3"></textarea></div>
-      </div>
-      <div style="margin-top:10px">
-        <label>Prisrader</label>
-        <div id="e_prices" class="prices"></div>
-        <div class="row">
-          <div class="col"><input id="e_p_desc" placeholder="Beskrivning" /></div>
-          <div class="col"><input id="e_p_amount" type="number" placeholder="Belopp (SEK)" /></div>
-          <div style="width:80px"><button class="btn" onclick="editAddPriceRow()">Lägg till</button></div>
-        </div>
-        <div class="price-total"><span class="muted">Summa:</span> <strong id="e_priceSum">0 kr</strong></div>
-      </div>
-      <div class="toolbar" style="margin-top:10px">
-        <button class="btn primary" onclick="saveEdit()">Spara</button>
-        <button class="btn ghost" onclick="closeEdit()">Avbryt</button>
-      </div>
+    </div>
+    <div class="toolbar">
+      <label class="search" title="Sök (träffar överst, markerade)">
+        <input id="q" placeholder="Sök…" autocomplete="off"/>
+      </label>
+      <button class="btn" id="btnImportVault">Importera .vault<input id="fileVault" type="file" accept=".vault,.json" hidden></button>
+      <button class="btn" id="btnExportVault">Exportera .vault</button>
+      <button class="btn btn-accent" id="btnAdd">Nytt kort</button>
+      <button class="btn" id="btnLock" title="Lås nu">Lås</button>
     </div>
   </div>
 
-  <script>
-    // ======= STATE =======
-    const state={
-      currentUser:null,
-      customers: JSON.parse(localStorage.getItem('ts_customers')||'[]'),
-      map:null, markers:[], editIndex:null, acNew:null, acEdit:null
-    };
-    function persist(){ localStorage.setItem('ts_customers', JSON.stringify(state.customers)); }
-    const uuidv4 = () => (typeof crypto!=='undefined' && crypto.randomUUID ? crypto.randomUUID() : ('id-'+Math.random().toString(36).slice(2)));
+  <div id="cards" class="grid" aria-live="polite"></div>
+  <div id="empty" class="empty" style="display:none">Inga poster än. Skapa ett kort eller importera .vault.</div>
+  <div class="footer">Autolås vid inaktivitet och när fliken döljs. Urklipp rensas efter 15 sek.</div>
+</div>
 
-    // ======= AUTH =======
-    function authLogin(){
-      const email=document.getElementById('email').value.trim();
-      if(!email) return alert('Fyll i e-post');
-      state.currentUser=email;
-      document.getElementById('authCard').classList.add('hide');
-      document.getElementById('app').classList.remove('hide');
-      document.getElementById('userEmail').textContent=email;
-      document.getElementById('userEmailTop').textContent=email;
-      openSection('dashboard', document.getElementById('navDashboard'));
-      renderAll(); refreshOfferList();
-    }
-    function authRegister(){ alert('Registrering i denna demo är lokal. Använd backend i produktion.'); }
-    function logout(){ location.reload(); }
+<!-- Modal: Nytt/Redigera -->
+<div class="gate" id="modalBackdrop" style="display:none;z-index:998;align-items:center;justify-content:center;background:rgba(0,0,0,.55)">
+  <div class="panel" style="width:min(640px,94vw)">
+    <h1 id="modalTitle" style="font-size:20px">Nytt kort</h1>
+    <div class="kv" style="margin-top:6px">
+      <div class="k">Titel / Sajt</div><div class="v"><input id="f_title" placeholder="t.ex. Google"></div>
+      <div class="k">Användarnamn</div><div class="v"><input id="f_user" placeholder="t.ex. mail@exempel.se"></div>
+      <div class="k">Lösenord</div>
+      <div class="v">
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="f_pass" type="text" placeholder="••••••" style="flex:1">
+          <span class="pill" id="toggleEditPw">Dölj</span>
+          <span class="pill" id="copyEditPw">Kopiera</span>
+          <span class="pill" id="genPw" title="Generera starkt">Generera</span>
+        </div>
+      </div>
+      <div class="k">URL</div><div class="v"><input id="f_url" placeholder="https://…"></div>
+      <div class="k">Anteckning</div><div class="v"><textarea id="f_note" rows="3" placeholder="Valfritt"></textarea></div>
+    </div>
+    <div class="row"><button class="btn" id="btnCancel">Avbryt</button><button class="btn btn-accent" id="btnSave">Spara</button></div>
+  </div>
+</div>
 
-    // ======= HAMBURGER / DRAWER =======
-    let drawerOpen=false;
-    function toggleDrawer(){
-      drawerOpen=!drawerOpen;
-      const sb=document.getElementById('sidebar');
-      if(!sb) return;
-      sb.classList.toggle('open', drawerOpen);
-      if(drawerOpen){
-        const back=document.createElement('div'); back.className='backdrop'; back.id='backdrop';
-        back.onclick=toggleDrawer; document.body.appendChild(back);
-      }else{
-        document.getElementById('backdrop')?.remove();
-      }
-    }
+<!-- Inbäddad CryptoJS (PBKDF2/AES/Base64) – för offline-fallback -->
+<script>
+/*! CryptoJS v4.1.1 (utdrag minifierat för AES/PBKDF2/Base64) */
+var CryptoJS=CryptoJS||function(u,l){var d={},n=d.lib={},p=function(){},s=n.Base={extend:function(a){p.prototype=this;var c=new p;a&&c.mixIn(a);c.hasOwnProperty("init")||(c.init=function(){c.$super.init.apply(this,arguments)});c.init.prototype=c;c.$super=this;return c},create:function(){var a=this.extend();a.init.apply(a,arguments);return a},init:function(){},mixIn:function(a){for(var c in a)a.hasOwnProperty(c)&&(this[c]=a[c]);a.hasOwnProperty("toString")&&(this.toString=a.toString)},clone:function(){return this.init.prototype.extend(this)}},
+q=n.WordArray=s.extend({init:function(a,c){a=this.words=a||[];this.sigBytes=c!=l?c:4*a.length},toString:function(a){return(a||v).stringify(this)},concat:function(a){var c=this.words,m=a.words,f=this.sigBytes;a=a.sigBytes;this.clamp();if(f%4)for(var t=0;t<a;t++)c[f+t>>>2]|=(m[t>>>2]>>>24-8*(t%4)&255)<<24-8*((f+t)%4);else if(65535<m.length)for(t=0;t<a;t+=4)c[f+t>>>2]=m[t>>>2];else c.push.apply(c,m);this.sigBytes+=a;return this},clamp:function(){var a=this.words,c=this.sigBytes;a[c>>>2]&=4294967295<<32-8*(c%4);a.length=u.ceil(c/4)},clone:function(){var a=s.clone.call(this);a.words=this.words.slice(0);return a},random:function(a){for(var c=[],m=0;m<a;m+=4)c.push(4294967296*u.random()|0);return new q.init(c,a)}}),w=d.enc={},v=w.Hex={stringify:function(a){var c=a.words;a=a.sigBytes;for(var m=[],f=0;f<a;f++){var t=c[f>>>2]>>>24-8*(f%4)&255;m.push((t>>>4).toString(16));m.push((t&15).toString(16))}return m.join("")},parse:function(a){for(var c=a.length,m=[],f=0;f<c;f+=2)m[f>>>3]|=parseInt(a.substr(f,2),16)<<24-4*(f%8);return new q.init(m,c/2)}},b=w.Base64={stringify:function(a){var c=a.words,m=a.sigBytes,f=this._map;a.clamp();a=[];for(var t=0;t<m;t+=3)for(var r=(c[t>>>2]>>>24-8*(t%4)&255)<<16|(c[t+1>>>2]>>>24-8*((t+1)%4)&255)<<8|c[t+2>>>2]>>>24-8*((t+2)%4)&255,e=0;4>e&&t+0.75*e<m;e++)a.push(f.charAt(r>>>6*(3-e)&63));if(c=f.charAt(64))for(;a.length%4;)a.push(c);return a.join("")},parse:function(a){var c=a.length,h=this._map,m=h.charAt(64);m&&(m=a.indexOf(m),-1!=m&&(c=m));for(var m=[],f=0,t=0;t<c;t++)if(t%4){var r=h.indexOf(a.charAt(t-1))<<2*(t%4),e=h.indexOf(a.charAt(t))>>>6-2*(t%4);m[f>>>2]|=(r|e)<<24-8*(f%4);f++}return q.create(m,f)},_map="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="};
+w.Utf8={stringify:function(a){try{return decodeURIComponent(escape(v.stringify(a)))}catch(c){throw Error("Malformed UTF-8 data");}},parse:function(a){return v.parse(unescape(encodeURIComponent(a)))}};
+var x=n.BufferedBlockAlgorithm=s.extend({reset:function(){this._data=q.create();this._nDataBytes=0},_append:function(a){"string"==typeof a&&(a=w.Utf8.parse(a));this._data.concat(a);this._nDataBytes+=a.sigBytes},_process:function(a){var c=this._data,m=c.words,f=c.sigBytes,h=this.blockSize,t=f/(4*h),t=a?u.ceil(t):u.max((t|0)-this._minBufferSize,0);a=t*h;f=u.min(4*a,f);if(a){for(var r=0;r<a;r+=h)this._doProcessBlock(m,r);r=m.splice(0,a);c.sigBytes-=f}return q.create(r,f)},clone:function(){var a=s.clone.call(this);a._data=this._data.clone();return a},_minBufferSize:0});
+n.Hasher=x.extend({cfg:s.extend(),init:function(a){this.cfg=this.cfg.extend(a);this.reset()},reset:function(){x.reset.call(this);this._doReset()},update:function(a){this._append(a);this._process();return this},finalize:function(a){a&&this._append(a);return this._doFinalize()},blockSize:16,createHelper:function(a){return function(c,m){return(new a.init(m)).finalize(c)}},createHmacHelper:function(a){return function(c,m){return(new y.HMAC.init(a,m)).finalize(c)}}});var y=d.algo={};
+(function(){var a=y.SHA256=n.Hasher.extend({_doReset:function(){this._hash=q.create([1779033703,3144134277,1013904242,2773480762,1359893119,2600822924,528734635,1541459225])},_doProcessBlock:function(a,c){for(var m=this._hash.words,f=m[0],h=m[1],t=m[2],r=m[3],e=m[4],g=m[5],k=m[6],n=m[7],b=0;64>b;b++){var d=a[c+b]|0;var l=n+(e>>>6^e>>>11^e>>>25)+(e&g^~e&k)+Math.floor(4294967296*u.abs(u.sin(b+1)))+d|0;var s=(f>>>2^f>>>13^f>>>22)+(f&h^f&t^h&t)|0;r=r+l|0;var o=((h>>>10^h>>>19^h>>>29)+((h&f)^(h&t)^(f&t)))|0;f=f+(s+r)|0}m[0]=m[0]+f|0;m[1]=m[1]+h|0;m[2]=m[2]+t|0;m[3]=m[3]+r|0;m[4]=m[4]+e|0;m[5]=m[5]+g|0;m[6]=m[6]+k|0;m[7]=m[7]+n|0},_doFinalize:function(){return this._hash},clone:function(){var a=n.Hasher.clone.call(this);a._hash=this._hash.clone();return a}})();
+d.PBKDF2=function(a,c,m){m=m||{};var f=n.algo.SHA256,t=m.hasher||f,r=m.keySize||8,e=m.iterations||1;var g=CryptoJS.algo.HMAC.create(t,c);var k=q.create();for(var i=1;i<=r;i++){var h=q.create([0,0,0,i]);g.reset();var o=g.update(a).finalize(h);for(var j=1;j<e;j++)g.reset(),o=g.finalize(o);k.concat(o)}k.sigBytes=4*r;return k};
+(function(){var a=CryptoJS,c=a.lib,m=c.BlockCipher,f=a.algo,t=[],r=[],e=[],g=[],k=[],n=[],b=[],d=[],l=[],p=[];(function(){for(var a=[],c=0;256>c;c++)a[c]=128>c?c<<1:c<<1^283;for(var m=0,f=0,c=0;256>c;c++){var h=f^f<<1^f<<2^f<<3^f<<4,h=h>>>8^h&255^99;t[m]=h;r[h]=m;var q=a[m],A=a[q],B=a[A],C=257*a[h]^16843008*h;e[m]=C<<24|C>>>8;g[m]=C<<16|C>>>16;k[m]=C<<8|C>>>24;n[m]=C;C=16843009*B^65537*A^257*q^16843008*m;b[h]=C<<24|C>>>8;d[h]=C<<16|C>>>16;l[h]=C<<8|C>>>24;p[h]=C;m?(m=q^a[a[a[B^q]]],f^=a[a[f]]):m=f=1}})();
+var h=[0,1,2,4,8,16,32,64,128,27,54],s=f.AES=m.extend({_doReset:function(){for(var a=this._key,c=a.words,m=a.sigBytes/4,a=4*((this._nRounds=m+6)+1),f=this._keySchedule=[],g=0;g<a;g++)if(g<m)f[g]=c[g];else{var k=f[g-1];g%m?m>6&&4==g%m&&(k=t[k>>>24]<<24|t[k>>>16&255]<<16|t[k>>>8&255]<<8|t[k&255]):(k=k<<8|k>>>24,k=t[k>>>24]<<24|t[k>>>16&255]<<16|t[k>>>8&255]<<8|t[k&255],k^=h[g/m|0]<<24);f[g]=f[g-m]^k}c=this._invKeySchedule=[];for(m=0;m<a;m++){g=a-m;var k=g%4?f[g]:f[g-4],q;0==m?q=b[t[k>>>24]]^d[t[k>>>16&255]]^l[t[k>>>8&255]]^p[t[k&255]]^f[g-4]:q=b[t[k>>>24]]^d[t[k>>>16&255]]^l[t[k>>>8&255]]^p[t[k&255]];c[m]=q}},encryptBlock:function(a,c){this._doCryptBlock(a,c,this._keySchedule,e,g,k,n,t)},decryptBlock:function(a,c){var m=a[c+1];a[c+1]=a[c+3];a[c+3]=m;this._doCryptBlock(a,c,this._invKeySchedule,b,d,l,p,r);m=a[c+1];a[c+1]=a[c+3];a[c+3]=m},_doCryptBlock:function(a,c,m,f,h,g,k,n,b){for(var d=this._nRounds,l=a[c]^m[0],p=a[c+1]^m[1],q=a[c+2]^m[2],r=a[c+3]^m[3],e=4,t=1;t<d;t++)var s=f[l>>>24]^h[p>>>16&255]^g[q>>>8&255]^k[r&255]^m[e++],u=f[p>>>24]^h[q>>>16&255]^g[r>>>8&255]^k[l&255]^m[e++],v=f[q>>>24]^h[r>>>16&255]^g[l>>>8&255]^k[p&255]^m[e++],w=f[r>>>24]^h[l>>>16&255]^g[p>>>8&255]^k[q&255]^m[e++],l=s,p=u,q=v,r=w;s=(n[l>>>24]<<24|n[p>>>16&255]<<16|n[q>>>8&255]<<8|n[r&255])^m[e++];u=(n[p>>>24]<<24|n[q>>>16&255]<<16|n[q>>>8&255]<<8|n[l&255])^m[e++];v=(n[q>>>24]<<24|n[r>>>16&255]<<16|n[r>>>8&255]<<8|n[p&255])^m[e++];w=(n[r>>>24]<<24|n[l>>>16&255]<<16|n[l>>>8&255]<<8|n[q&255])^m[e++];a[c]=s;a[c+1]=u;a[c+2]=v;a[c+3]=w},keySize:8});a.AES=m}(Math));
+</script>
 
-    // ======= NAVIGATION =======
-    function openSection(id,btn){
-      // stäng menyn på mobil när man väljer
-      if(drawerOpen) toggleDrawer();
+<script>
+/* ==================== APP LOGIK ==================== */
 
-      for(const sec of ['dashboard','newCustomer','customers','jobs','mapview','offers']){
-        const el=document.getElementById(sec);
-        if(el){
-          const isActive = (sec===id);
-          el.classList.toggle('hide', !isActive);
-          if(isActive) el.classList.add('active'); else el.classList.remove('active');
-        }
-      }
-      document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
-      if(btn) btn.classList.add('active');
-      if(id==='mapview') initMapOnce();
-    }
+/* Exempeldata första gången (du kan ta bort/ändra) */
+const SEED=[
+  {"title":"Google mail träd","user":"info@tradspecialisterna.se","pass":"Tradfallning1","url":"mail.google.com","note":"Återställning 0738 55 95 23  & info@hedekontorshotell.se"},
+  {"title":"One webbhotell (Hemsida)","user":"info@tradspecialisterna.se","pass":"Nvidia8007185716","url":"one.com","note":"Portal för hantering av hemsida"},
+  {"title":"One webbhotell","user":"reserv@tradspecialisterna.se","pass":"Jimmy12345","url":"one.com","note":""},
+  {"title":"Facebook Trädspecialisterna","user":"info@tradspecialisterna.se","pass":"Tradfallning1","url":"facebook.com","note":""}
+];
 
-    // ======= GLOBAL SÖK =======
-    function syncGlobalSearch(){
-      const q=document.getElementById('globalSearch').value || '';
-      const local=document.getElementById('search');
-      if(local) local.value=q;
-      renderAll();
-    }
+/* Hjälpare */
+const $=s=>document.querySelector(s);
+const uid=()=>Math.random().toString(36).slice(2)+Date.now().toString(36);
+const te=new TextEncoder(), td=new TextDecoder();
+function showErr(msg){const e=$("#err");e.textContent=msg||"";e.style.display=msg?"block":"none";}
+function escapeHtml(s){return (s||'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&gt;","&quot;":"&quot;","'":"&#39;"}[c]));}
+function normalizeUrl(u){if(!u)return"";let s=String(u).trim();if(!s)return"";if(!/^[a-z]+:\\/\\//i.test(s)){if(/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(s))return"mailto:"+s;s="https://"+s;}return s;}
+function getHost(u){try{return new URL(normalizeUrl(u)).hostname}catch{const m=String(u||"").match(/^([^\\/:?#]+)(?::\\d+)?/);return m?m[1]:""}}
+function favicon(h){return h?`https://icons.duckduckgo.com/ip3/${h}.ico`:""}
+function toast(m){const t=document.createElement('div');t.textContent=m;Object.assign(t.style,{position:'fixed',bottom:'18px',left:'50%',transform:'translateX(-50%)',background:'#20242a',border:'1px solid #2a2f36',padding:'10px 14px',borderRadius:'999px',boxShadow:'0 10px 25px rgba(0,0,0,.35)'});document.body.appendChild(t);setTimeout(()=>t.remove(),1700);}
 
-    // ======= PRICE HELPERS (NEW) =======
-    let tempPrices=[]; // for the create form
-    function sumAmounts(list){ return (list||[]).reduce((n,p)=>n+(Number(p.amount)||0),0); }
-    function addPriceRow(){
-      const d=document.getElementById('p_desc').value.trim();
-      const a=Number(document.getElementById('p_amount').value||0);
-      if(!d || !a) return;
-      tempPrices.push({desc:d, amount:a});
-      document.getElementById('p_desc').value=''; document.getElementById('p_amount').value='';
-      renderPriceList('prices','priceSum',tempPrices);
-    }
-    function removePriceRow(idx){ tempPrices.splice(idx,1); renderPriceList('prices','priceSum',tempPrices); }
-    function renderPriceList(containerId,sumId,list){
-      const wrap=document.getElementById(containerId); if(!wrap) return; wrap.innerHTML='';
-      list.forEach((p,i)=>{
-        const row=document.createElement('div'); row.className='price-row';
-        row.innerHTML=`<input value="${p.desc}" oninput="tempPrices[${i}].desc=this.value" />
-                       <input type="number" value="${p.amount}" oninput="tempPrices[${i}].amount=Number(this.value||0); updateSum('${sumId}', tempPrices)" />
-                       <button class="btn" onclick="removePriceRow(${i})">✕</button>`;
-        wrap.appendChild(row);
-      });
-      updateSum(sumId, list);
-    }
-    function updateSum(sumId,list){ const s=sumAmounts(list); const el=document.getElementById(sumId); if(el) el.textContent=s.toLocaleString('sv-SE')+' kr'; }
+/* Lagring + state */
+const VAULT_KEY='vault_v3', SETTINGS_KEY='vault_settings_v3', RECOVERY_BLOB_KEY='vault_recovery_v3';
+let MASTER=null, vault={items:[]};
+let settings={autoLockMin:5,kdfIter:250000,recoveryEmail:"",recoveryKey:""};
+try{settings={...settings,...(JSON.parse(localStorage.getItem(SETTINGS_KEY))||{})}}catch{}
+function saveSettings(){localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));}
 
-    // ======= CREATE CUSTOMER =======
-    function val(x){ const el=document.getElementById(x); return el? (el.value||'') : ''; }
-    function clearCustomerForm(){ ['c_name','c_ssn','c_email','c_phone','c_address','c_notes'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-      document.getElementById('c_status').value='Inkomna'; document.getElementById('c_quote_sent').value='Nej'; tempPrices=[]; renderPriceList('prices','priceSum',tempPrices);
-    }
-    function saveCustomer(){
-      const c={
-        id: uuidv4(),
-        name: val('c_name'), ssn: val('c_ssn'), email: val('c_email'), phone: val('c_phone'),
-        address: val('c_address'), status: val('c_status'), quote_sent: val('c_quote_sent'),
-        notes: val('c_notes'),
-        priceItems: [...tempPrices],
-        price: sumAmounts(tempPrices),
-        lat: lastNewPlace?.lat||null, lng: lastNewPlace?.lng||null,
-        createdAt: Date.now(),
-        quote_status: (val('c_quote_sent')==='Ja'?'sent': 'sent') // plats för spårad status
-      };
-      if(!c.name||!c.address){ alert('Namn och adress krävs'); return; }
-      state.customers.push(c); persist();
-      clearCustomerForm(); renderAll(); openSection('customers', document.querySelectorAll('.nav button')[2]);
-    }
+/* Kryptering: WebCrypto (AES-GCM) om möjligt, annars CryptoJS (AES-CBC) */
+const hasSubtle=!!(crypto&&crypto.subtle);
+function b64(a){return btoa(String.fromCharCode(...new Uint8Array(a)))} function ub64(s){return Uint8Array.from(atob(s),c=>c.charCodeAt(0))}
+async function deriveKey(pass,salt,iter){const km=await crypto.subtle.importKey('raw',te.encode(pass),'PBKDF2',false,['deriveKey']);return await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:iter,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);}
+async function encWC(pass,obj,iter=settings.kdfIter){const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),key=await deriveKey(pass,salt,iter),ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,te.encode(JSON.stringify(obj)));return{v:3,a:'wc',iter,salt:b64(salt),iv:b64(iv),ct:b64(ct)}}
+async function decWC(pass,blob){const key=await deriveKey(pass,ub64(blob.salt),blob.iter||settings.kdfIter),pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(blob.iv)},key,ub64(blob.ct));return JSON.parse(td.decode(pt))}
+function b64js(w){return CryptoJS.enc.Base64.stringify(CryptoJS.lib.WordArray.create(w))}
+function fromB64js(b){return Uint8Array.from(atob(b),c=>c.charCodeAt(0))}
+async function encCJS(pass,obj,iter=settings.kdfIter){const salt=crypto.getRandomValues?crypto.getRandomValues(new Uint8Array(16)):new Uint8Array(16).map(()=>Math.random()*256|0);const iv=crypto.getRandomValues?crypto.getRandomValues(new Uint8Array(16)):new Uint8Array(16).map(()=>Math.random()*256|0);const key=CryptoJS.PBKDF2(pass, CryptoJS.lib.WordArray.create(salt), {keySize:256/32,iterations:iter,hasher:CryptoJS.algo.SHA256});const ct=CryptoJS.AES.encrypt(JSON.stringify(obj), key, {iv:CryptoJS.lib.WordArray.create(iv)}).ciphertext;return{v:3,a:'cjs',iter,salt:b64js(salt),iv:b64js(iv),ct:CryptoJS.enc.Base64.stringify(ct)}}
+async function decCJS(pass,blob){const salt=fromB64js(blob.salt),iv=fromB64js(blob.iv);const key=CryptoJS.PBKDF2(pass, CryptoJS.lib.WordArray.create(salt), {keySize:256/32,iterations:blob.iter||settings.kdfIter,hasher:CryptoJS.algo.SHA256});const ctW=CryptoJS.enc.Base64.parse(blob.ct);const pt=CryptoJS.AES.decrypt({ciphertext:ctW}, key, {iv:CryptoJS.lib.WordArray.create(iv)});const txt=CryptoJS.enc.Utf8.stringify(pt);if(!txt) throw new Error('bad-pass');return JSON.parse(txt)}
+const encVault=(pass,obj)=> hasSubtle?encWC(pass,obj):encCJS(pass,obj);
+const decVault=(pass,blob)=> hasSubtle?decWC(pass,blob):decCJS(pass,blob);
 
-    // ======= LISTS & TABLES =======
-    function fmt(n){ n=Number(n||0); return n.toLocaleString('sv-SE'); }
-    function filteredCustomers(){
-      const q=(document.getElementById('search')?.value||'').toLowerCase();
-      const fs=(document.getElementById('filterStatus')?.value||'');
-      return state.customers.filter(c=>{
-        const okStatus=!fs||c.status===fs;
-        const s=(c.name+' '+(c.phone||'')+' '+(c.ssn||'')+' '+(c.address||'')+' '+(c.email||'')+' '+(c.status||'')).toLowerCase();
-        return okStatus && s.includes(q);
-      });
-    }
+async function persist(){
+  const blob=await encVault(MASTER,vault);
+  localStorage.setItem(VAULT_KEY,JSON.stringify(blob));
+  if(settings.recoveryEmail && settings.recoveryKey){
+    const r=await encVault(settings.recoveryEmail+'|'+settings.recoveryKey, vault);
+    localStorage.setItem(RECOVERY_BLOB_KEY, JSON.stringify(r));
+  }
+}
+async function unlock(pass){
+  const raw=localStorage.getItem(VAULT_KEY); if(!raw) throw new Error('no-vault');
+  vault = await decVault(pass, JSON.parse(raw)); MASTER=pass; armAutolock();
+}
+async function createNewVault(pass,email,recoveryKey){
+  vault={items:SEED.map(x=>({id:uid(),...x}))};
+  MASTER=pass; settings.recoveryEmail=email.trim(); settings.recoveryKey=recoveryKey; saveSettings();
+  await persist(); armAutolock();
+}
 
-    function renderCustomers(){
-      const wrap=document.getElementById('customerList'); if(!wrap) return; wrap.innerHTML='';
-      const arr=filteredCustomers();
-      arr.forEach(c=>{
-        const div=document.createElement('div'); div.className='item';
-        div.draggable=true; div.ondragstart=(e)=>dragStart(e,c.id);
-        const offerBadge = c.quote_status==='accepted' ? '✅ Accepterad' : c.quote_status==='declined' ? '❌ Avböjd' : (c.quote_sent||'Nej');
-        div.innerHTML=`<h4>${c.name}</h4>
-          <div class="muted">${c.address}</div>
-          <div class="toolbar" style="margin:8px 0">
-            <span class="status">${c.status||'–'}</span>
-            <span class="pill">Offert: ${offerBadge}</span>
-            <span class="pill">Summa: ${fmt(c.price)} kr</span>
+/* Autolås */
+let lockTimer=null;
+function armAutolock(){clearTimeout(lockTimer);lockTimer=setTimeout(lockNow,Math.max(1,settings.autoLockMin)*60*1000)}
+function userActivity(){if(MASTER)armAutolock()}
+function lockNow(){MASTER=null;$('#app').setAttribute('aria-hidden','true');showLogin();$('#gate').style.display='flex'}
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&MASTER)lockNow()});
+['click','keydown','mousemove','touchstart'].forEach(ev=>document.addEventListener(ev,userActivity,{passive:true}));
+
+/* Gate-faser */
+const state={phase:'onboarding1',tempKey:''};
+function toOnb1(){state.phase='onboarding1';$('#onb').style.display='';$('#recoveryStep').style.display='none';$('#login').style.display='none';$('#primaryBtn').textContent='Skapa valv';showErr('')}
+function toOnb2(){state.phase='onboarding2';$('#onb').style.display='none';$('#recoveryStep').style.display='';$('#login').style.display='none';$('#primaryBtn').textContent='Klar & logga in';showErr('')}
+function showLogin(){state.phase='login';$('#onb').style.display='none';$('#recoveryStep').style.display='none';$('#login').style.display='';$('#primaryBtn').textContent='Lås upp';showErr('');$('#mp').value=''}
+
+function validateOnboarding(){
+  const p1=$('#mp1').value, p2=$('#mp2').value, em=$('#mpEmail').value.trim();
+  let ok=true; const set=(el,ok,msgId)=>{el.classList.toggle('error',!ok); if(!ok) showErr(msgId)};
+  set($('#mp1'), p1.length>=8, 'Lösenordet måste vara minst 8 tecken.'); ok=ok&&(p1.length>=8);
+  set($('#mp2'), p2===p1, 'Lösenorden matchar inte.'); ok=ok&&(p2===p1);
+  const emailOk=/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em); set($('#mpEmail'), emailOk, 'Ogiltig e-postadress.'); ok=ok&&emailOk;
+  if(ok) showErr('');
+  return ok;
+}
+function generateRecoveryKey(){
+  const dict='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s=''; const r=new Uint32Array(32);
+  (crypto.getRandomValues?crypto.getRandomValues(r):(()=>{for(let i=0;i<32;i++)r[i]=Math.random()*4294967296|0;})());
+  for(let i=0;i<32;i++) s+=dict[r[i]%dict.length];
+  return s.match(/.{1,4}/g).join('-');
+}
+
+/* Gate-knappen – robust faslogik */
+document.getElementById('primaryBtn').addEventListener('click', async ()=>{
+  try{
+    if(state.phase==='login'){  // Lås upp
+      try{ await unlock($('#mp').value); $('#gate').style.display='none'; $('#app').setAttribute('aria-hidden','false'); render(); }
+      catch{ showErr('Fel lösenord.'); }
+      return;
+    }
+    if(state.phase==='onboarding1'){ // Validera & visa nyckel
+      if(!validateOnboarding()) return;
+      state.tempKey=generateRecoveryKey(); $('#recoveryKey').textContent=state.tempKey; toOnb2(); return;
+    }
+    if(state.phase==='onboarding2'){ // Skapa valv & in
+      await createNewVault($('#mp1').value,$('#mpEmail').value.trim(),state.tempKey);
+      $('#gate').style.display='none'; $('#app').setAttribute('aria-hidden','false'); render(); return;
+    }
+  }catch(e){ console.error(e); showErr('Ett fel inträffade. Försök igen.'); }
+});
+
+/* Kopiera/lad­da ned/ma­ila nyckeln */
+document.getElementById('copyKey').onclick=()=>{navigator.clipboard?.writeText($('#recoveryKey').textContent||'');toast('Nyckel kopierad')};
+document.getElementById('downloadKey').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([($('#recoveryKey').textContent||'')+'\n']));a.download='recovery_key.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)};
+document.getElementById('emailKey').onclick=()=>{const addr=$('#mpEmail').value.trim(); if(!addr){toast('Fyll i e-post');return;} const sub=encodeURIComponent('Återställningsnyckel till valv'); const body=encodeURIComponent($('#recoveryKey').textContent||''); location.href=`mailto:${addr}?subject=${sub}&body=${body}`};
+
+/* Återställ-länk & glömt lösenord */
+document.getElementById('factoryReset').onclick=(e)=>{e.preventDefault(); if(confirm('Återställ appen? All lokal data tas bort.')){ localStorage.removeItem(VAULT_KEY); localStorage.removeItem(SETTINGS_KEY); localStorage.removeItem(RECOVERY_BLOB_KEY); location.reload(); }};
+document.getElementById('forgotBtn').onclick=(e)=>{e.preventDefault(); $('#resetForm').style.display='block'; $('#login').style.display='none'; showErr('');};
+document.getElementById('cancelReset').onclick=()=>{$('#resetForm').style.display='none'; $('#login').style.display=''; showErr('');};
+document.getElementById('applyReset').onclick=async ()=>{
+  const e=$('#resetEmail').value.trim();
+  const raw=($('#resetKey').value||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,''); const k=raw.match(/.{1,4}/g)?.join('-')||'';
+  const n1=$('#resetNew1').value, n2=$('#resetNew2').value;
+  if(!e||!k){showErr('Fyll i e-post och nyckel.');return;}
+  if(n1.length<8||n1!==n2){showErr('Nytt lösenord ogiltigt eller matchar inte.');return;}
+  try{
+    const r=localStorage.getItem(RECOVERY_BLOB_KEY); if(!r) throw new Error('no-rec');
+    const recovered = await decVault(e+'|'+k, JSON.parse(r));
+    MASTER=n1; vault=recovered; settings.recoveryEmail=e; settings.recoveryKey=k; saveSettings(); await persist();
+    $('#resetForm').style.display='none'; $('#gate').style.display='none'; $('#app').setAttribute('aria-hidden','false'); render(); toast('Lösenord återställt');
+  }catch{ showErr('Fel e-post/nyckel eller saknas återställningsdata.'); }
+};
+
+/* ===== Sök + list ===== */
+function score(it,t){let s=0;const a=(it.title||'').toLowerCase(),u=(it.user||'').toLowerCase(),l=(it.url||'').toLowerCase(),n=(it.note||'').toLowerCase();for(const k of t){if(!k)continue;if(a===k)s+=120;if(a.startsWith(k))s+=80;if(a.includes(k))s+=50;if(l.includes(k))s+=35;if(u.includes(k))s+=30;if(n.includes(k))s+=10;}return s;}
+document.getElementById('q').addEventListener('input',render);
+
+function render(){
+  const q=$('#q').value.trim().toLowerCase(); const toks=q.split(/\s+/).filter(Boolean);
+  const arr=(vault.items||[]).map((x,i)=>({_i:i,...x}));
+  if(toks.length){arr.sort((A,B)=>{const a=score(A,toks),b=score(B,toks);if((b>0)-(a>0))return (b>0)-(a>0); if(b!==a)return b-a; return A._i-B._i;});}
+  const root=$('#cards'); root.innerHTML=''; $('#empty').style.display=arr.length?'none':'block';
+  for(const it of arr){
+    const host=getHost(it.url||''), fav=favicon(host), url=normalizeUrl(it.url);
+    const card=document.createElement('div'); card.className='card';
+    card.innerHTML=`
+      <div class="card-head">
+        ${fav?`<img class="favicon" src="${fav}" onerror="this.style.visibility='hidden'">`:`<div class="favicon"></div>`}
+        <div style="min-width:0">
+          <div style="font-weight:700;overflow-wrap:anywhere">${escapeHtml(it.title||'')}</div>
+          <div style="color:#aeb6bf;font-size:12px;overflow-wrap:anywhere">${escapeHtml(it.url||'')}</div>
+        </div>
+        <span class="badge">Kort</span>
+      </div>
+      <div class="kv">
+        <div class="k">Användare</div><div class="v" style="overflow-wrap:anywhere">${escapeHtml(it.user||'')}</div>
+        <div class="k">Lösenord</div>
+        <div class="v">
+          <input id="pw_${it.id}" type="password" value="${escapeHtml(it.pass||'')}" readonly>
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <span class="pill" data-act="toggle" data-id="pw_${it.id}">Visa/Dölj</span>
+            <span class="pill" data-act="copy" data-id="pw_${it.id}">Kopiera</span>
           </div>
-          <div class="muted">${(c.email||'')+(c.phone? ' • '+c.phone:'')}</div>
-          <div class="toolbar" style="margin-top:10px">
-            <button class="btn" onclick="openEditById('${c.id}')">Redigera</button>
-            <button class="btn ghost" onclick="prefillOfferFromId('${c.id}')">Skicka offert</button>
-            <button class="btn" onclick="focusOnMapById('${c.id}')">Visa på karta</button>
-          </div>`;
-        wrap.appendChild(div);
-      });
-    }
+        </div>
+        <div class="k">Anteckning</div><div class="v" style="overflow-wrap:anywhere">${escapeHtml(it.note||'')}</div>
+      </div>
+      <div class="row-actions">
+        <span class="pill" data-edit="${it.id}">Redigera</span>
+        <span class="pill" data-del="${it.id}" style="background:#261a1a;border-color:#5a2626;color:#ffb3b3">Ta bort</span>
+        ${url?`<a class="pill" href="${url}" target="_blank" rel="noopener">Öppna länk</a>`:''}
+      </div>`;
+    root.appendChild(card);
+  }
+}
 
-    function renderJobs(){
-      const tbody=document.querySelector('#jobTable tbody'); if(!tbody) return; tbody.innerHTML='';
-      const arr=state.customers.filter(c=>['Fått pris','Pågående','Klara'].includes(c.status||''));
-      const q=(document.getElementById('search')?.value||'').toLowerCase(); const fs=(document.getElementById('filterStatus')?.value||'');
-      arr.filter(c=>{
-        const okStatus=!fs||c.status===fs; const s=(c.name+' '+c.address+' '+(c.email||'')+' '+(c.phone||'')+' '+(c.ssn||'')+' '+(c.status||'')).toLowerCase();
-        return okStatus && s.includes(q);
-      }).forEach(c=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${c.name}</td><td>${c.address}</td><td>${c.status}</td><td>${c.quote_status==='accepted'?'✅ Accepterad':c.quote_status==='declined'?'❌ Avböjd':(c.quote_sent||'Nej')}</td><td class="right">${fmt(c.price)} kr</td>
-          <td class="right"><button class="btn" onclick="openEditById('${c.id}')">✏️</button></td>`;
-        tbody.appendChild(tr);
-      });
-    }
+/* List-actions */
+document.getElementById('cards').addEventListener('click',e=>{
+  const t=e.target;
+  if(t.dataset.act==='toggle'){const i=document.getElementById(t.dataset.id);i.type=i.type==='password'?'text':'password';}
+  if(t.dataset.act==='copy'){const i=document.getElementById(t.dataset.id);const p=i.type;i.type='text';i.select();document.execCommand('copy');i.type=p;toast('Kopierat!');setTimeout(()=>{navigator.clipboard?.writeText?.('');},15000);}
+  if(t.dataset.edit){openModalEdit(t.dataset.edit);}
+  if(t.dataset.del){const id=t.dataset.del;if(confirm('Ta bort detta kort?')){vault.items=vault.items.filter(x=>x.id!==id);persist().then(()=>{render();toast('Borttagen');});}}
+});
 
-    function renderDashboard(){
-      const cols={'Inkomna':[], 'Fått pris':[], 'Pågående':[], 'Klara':[]};
-      const arr=filteredCustomers();
-      arr.forEach(c=>{ (cols[c.status||'Inkomna']||cols['Inkomna']).push(c); });
-      let quoted=0; arr.forEach(c=>{ if((c.quote_sent||'Nej')==='Ja' || c.quote_status==='accepted' || c.quote_status==='declined') quoted++; });
-      document.getElementById('statsTotal').textContent=arr.length;
-      document.getElementById('statsQuoted').textContent=quoted;
-      for(const k of Object.keys(cols)){
-        const body=document.getElementById('col-'+k.replace(' ','-')) || document.getElementById('col-'+k);
-      }
-      // render bodies
-      const colIds={'Inkomna':'col-Inkomna','Fått pris':'col-Fått pris','Pågående':'col-Pågående','Klara':'col-Klara'};
-      const countIds={'Inkomna':'count-Inkomna','Fått pris':'count-Fått pris','Pågående':'count-Pågående','Klara':'count-Klara'};
-      for(const k of Object.keys(cols)){
-        const body=document.getElementById(colIds[k]); const count=document.getElementById(countIds[k]);
-        if(body){ body.innerHTML=''; cols[k].forEach(c=>{
-          const d=document.createElement('div'); d.className='ticket'; d.draggable=true; d.ondragstart=(e)=>dragStart(e,c.id);
-          const badge = c.quote_status==='accepted'?'✅':c.quote_status==='declined'?'❌':(c.quote_sent||'Nej');
-          d.innerHTML=`<div style="font-weight:700">${c.name}</div><div class="muted">${c.address}</div><div class="muted">${fmt(c.price)} kr • Offert: ${badge}</div>`;
-          body.appendChild(d);
-        }); if(count) count.textContent=cols[k].length; }
-      }
-    }
+/* Modal nytt/redigera */
+const modal={open:()=>$('#modalBackdrop').style.display='flex',close:()=>$('#modalBackdrop').style.display='none'};
+document.getElementById('btnAdd').onclick=()=>{$('#modalTitle').textContent='Nytt kort';['title','user','pass','url','note'].forEach(k=>$('#f_'+k).value='');$('#btnSave').dataset.id='';$('#f_pass').type='text';$('#toggleEditPw').textContent='Dölj';modal.open();};
+document.getElementById('btnCancel').onclick=()=>modal.close();
+function openModalEdit(id){const it=vault.items.find(x=>x.id===id);if(!it)return;$('#modalTitle').textContent='Redigera kort';$('#btnSave').dataset.id=id;$('#f_title').value=it.title||'';$('#f_user').value=it.user||'';$('#f_pass').value=it.pass||'';$('#f_url').value=it.url||'';$('#f_note').value=it.note||'';$('#f_pass').type='text';$('#toggleEditPw').textContent='Dölj';modal.open();}
 
-    function renderAll(){ renderCustomers(); renderJobs(); renderDashboard(); refreshOfferList(); plotMarkers(); }
+document.addEventListener('click',e=>{
+  if(e.target?.id==='toggleEditPw'){const i=$('#f_pass'); if(i.type==='password'){i.type='text';e.target.textContent='Dölj';}else{i.type='password';e.target.textContent='Visa';}}
+  if(e.target?.id==='copyEditPw'){const i=$('#f_pass'); const p=i.type; i.type='text'; i.select(); document.execCommand('copy'); i.type=p; toast('Kopierat!'); setTimeout(()=>{navigator.clipboard?.writeText?.('');},15000);}
+  if(e.target?.id==='genPw'){ $('#f_pass').value=genPass(); }
+});
 
-    // ======= DRAG & DROP =======
-    let dragId=null;
-    function dragStart(e,id){ dragId=id; e.dataTransfer.setData('text/plain', id); }
-    function allowDrop(e){ e.preventDefault(); e.currentTarget.classList.add('dropping'); }
-    function dropOnCol(e,status){ e.preventDefault(); e.currentTarget.classList.remove('dropping');
-      const idd=e.dataTransfer.getData('text/plain')||dragId; const c=state.customers.find(x=>x.id===idd); if(!c) return;
-      c.status=status; persist(); renderAll(); }
+document.getElementById('btnSave').onclick=()=>{const id=$('#btnSave').dataset.id||uid();const it={id,title:$('#f_title').value.trim(),user:$('#f_user').value.trim(),pass:$('#f_pass').value,url:$('#f_url').value.trim(),note:$('#f_note').value.trim()};const i=vault.items.findIndex(x=>x.id===id);if(i>=0)vault.items[i]=it;else vault.items.unshift(it);persist().then(()=>{modal.close();render();toast('Sparat');});};
 
-    // ======= EDIT MODAL =======
-    let tempEditPrices=[];
-    function openEditById(idc){ state.editIndex=state.customers.findIndex(x=>x.id===idc); openEdit(state.editIndex); }
-    function openEdit(i){ const c=state.customers[i]; if(!c) return; show('editModal');
-      id('e_name').value=c.name||''; id('e_ssn').value=c.ssn||''; id('e_email').value=c.email||''; id('e_phone').value=c.phone||'';
-      id('e_address').value=c.address||''; id('e_status').value=c.status||'Inkomna'; id('e_quote_sent').value=c.quote_sent||'Nej'; id('e_notes').value=c.notes||'';
-      tempEditPrices=c.priceItems? JSON.parse(JSON.stringify(c.priceItems)) : []; renderEditPriceList();
-      setupAutocompleteEdit();
-    }
-    function renderEditPriceList(){ const wrap=id('e_prices'); if(!wrap) return; wrap.innerHTML='';
-      tempEditPrices.forEach((p,i)=>{
-        const row=document.createElement('div'); row.className='price-row';
-        row.innerHTML=`<input value="${p.desc}" oninput="tempEditPrices[${i}].desc=this.value" />
-                       <input type="number" value="${p.amount}" oninput="tempEditPrices[${i}].amount=Number(this.value||0); updateSum('e_priceSum', tempEditPrices)" />
-                       <button class="btn" onclick="editRemovePriceRow(${i})">✕</button>`;
-        wrap.appendChild(row);
-      });
-      updateSum('e_priceSum', tempEditPrices);
-    }
-    function editAddPriceRow(){ const d=id('e_p_desc').value.trim(); const a=Number(id('e_p_amount').value||0); if(!d||!a) return; tempEditPrices.push({desc:d,amount:a}); id('e_p_desc').value=''; id('e_p_amount').value=''; renderEditPriceList(); }
-    function editRemovePriceRow(i){ tempEditPrices.splice(i,1); renderEditPriceList(); }
-    function saveEdit(){ const i=state.editIndex; if(i==null) return; const c=state.customers[i];
-      c.name=val('e_name'); c.ssn=val('e_ssn'); c.email=val('e_email'); c.phone=val('e_phone'); c.address=val('e_address'); c.status=val('e_status'); c.quote_sent=val('e_quote_sent'); c.notes=val('e_notes');
-      c.priceItems=[...tempEditPrices]; c.price=sumAmounts(tempEditPrices);
-      persist(); hide('editModal'); renderAll();
-    }
-    function closeEdit(){ hide('editModal'); }
+/* Export/Import .vault */
+document.getElementById('btnExportVault').onclick=async()=>{if(!MASTER){lockNow();return;}const blob=localStorage.getItem(VAULT_KEY)||'{}';const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([blob],{type:'application/json'}));a.download='losenord.vault';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);toast('Exporterade .vault');};
+document.getElementById('btnImportVault').addEventListener('click',()=>document.getElementById('fileVault').click());
+document.getElementById('fileVault').addEventListener('change',async ev=>{const f=ev.target.files[0];if(!f)return;try{const obj=JSON.parse(await f.text());if(!obj.ct){alert('Ogiltig vault-fil');return;}localStorage.setItem(VAULT_KEY,JSON.stringify(obj));lockNow();toast('Vault importerad – logga in.');}catch{alert('Kunde inte läsa filen');}});
 
-    // ======= OFFERS =======
-    function id(x){ return document.getElementById(x); }
-    function show(x){ id(x).classList.remove('hide'); }
-    function hide(x){ id(x).classList.add('hide'); }
+/* Lås / generator */
+document.getElementById('btnLock').onclick=()=>lockNow();
+function genPass(len=20){const chars='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{};:,.?';let out='';const r=new Uint32Array(len);(crypto.getRandomValues?crypto.getRandomValues(r):(()=>{for(let i=0;i<len;i++)r[i]=Math.random()*4294967296|0;})());for(let i=0;i<len;i++) out+=chars[r[i]%chars.length];return out;}
 
-    function buildOfferSubject(c){ return `Offert – Arbete på ${c.address}`; }
-    function buildOfferBody(c){
-      const rows=(c.priceItems||[]).map(p=>`• ${p.desc}: ${fmt(p.amount)} kr`).join('\n');
-      return `Hej ${c.name},\n\nTack för förfrågan. Vi erbjuder följande arbete:\n${rows ? rows+'\n' : ''}\nTotalsumma: ${fmt(c.price)} kr\nGiltig t.o.m. ${new Date(Date.now()+1000*60*60*24*14).toLocaleDateString('sv-SE')}\n\nÅterkom gärna om du har frågor.\n\nVänligen,\nTrädspecialisterna`;
-    }
-    function refreshOfferList(){ const sel=id('offerCustomer'); if(!sel) return; sel.innerHTML=''; state.customers.forEach((c)=>{
-      const o=document.createElement('option'); o.value=c.id; o.textContent=c.name+' – '+c.address; sel.appendChild(o);
-    }); if(state.customers.length) prefillOffer(); }
-    function prefillOffer(){ const idc=id('offerCustomer').value; const c=state.customers.find(x=>x.id===idc); if(!c) return;
-      id('offerSubject').value=buildOfferSubject(c);
-      id('offerBody').value=buildOfferBody(c);
-    }
-    function prefillOfferFromId(idc){ id('offerCustomer').value=idc; prefillOffer(); openSection('offers', document.querySelectorAll('.nav button')[5]); }
-    function composeMailto(){ const idc=id('offerCustomer').value; const c=state.customers.find(x=>x.id===idc); if(!c) return alert('Välj kund');
-      const subject=encodeURIComponent(id('offerSubject').value||'Offert – Trädspecialisterna');
-      const body=encodeURIComponent(id('offerBody').value||'');
-      const to=encodeURIComponent(c.email||'');
-      window.location.href=`mailto:${to}?subject=${subject}&body=${body}`;
-    }
-    function markQuoteSent(){ const idc=id('offerCustomer').value; const c=state.customers.find(x=>x.id===idc); if(!c) return; c.quote_sent='Ja'; persist(); renderAll(); alert('Markerad som skickad'); }
-
-    // ======= MAP & AUTOCOMPLETE =======
-    let lastNewPlace=null;
-    function initMapOnce(){ if(state.map){ plotMarkers(); return; } if(!id('map')) return; try{ state.map=new google.maps.Map(id('map'),{center:{lat:57.6,lng:11.9},zoom:8}); plotMarkers(); }catch(err){ console.warn('Map init failed:', err); } }
-    function plotMarkers(){ if(!state.map || typeof google==='undefined' || !google.maps) return; state.markers.forEach(m=>m.setMap(null)); state.markers=[];
-      const fs=id('mapFilter')?.value||''; const arr=state.customers.filter(c=>!fs||c.status===fs);
-      arr.forEach(c=>{ if(c.lat && c.lng){ const m=new google.maps.Marker({position:{lat:c.lat,lng:c.lng},map:state.map,title:c.name});
-        const inf=new google.maps.InfoWindow({content:`<strong>${c.name}</strong><br>${c.address}<br>Status: ${c.status}<br>Summa: ${fmt(c.price)} kr`});
-        m.addListener('click',()=>inf.open({anchor:m,map:state.map})); state.markers.push(m); }});
-      if(arr.some(c=>c.lat&&c.lng)){
-        const b=new google.maps.LatLngBounds(); arr.forEach(c=>{ if(c.lat&&c.lng) b.extend({lat:c.lat,lng:c.lng}); });
-        state.map.fitBounds(b);
-      }
-    }
-    function focusOnMapById(idc){ openSection('mapview', document.querySelectorAll('.nav button')[4]); initMapOnce(); const c=state.customers.find(x=>x.id===idc); if(!c||!c.lat) return; state.map.setCenter({lat:c.lat,lng:c.lng}); state.map.setZoom(14); }
-
-    function setupAutocompleteNew(){ const inp=id('c_address'); if(!inp || typeof google==='undefined' || !google.maps?.places) return; state.acNew=new google.maps.places.Autocomplete(inp,{ componentRestrictions:{ country:['se'] } }); state.acNew.addListener('place_changed',()=>{
-      const place=state.acNew.getPlace(); const loc=place.geometry?.location; if(loc){ lastNewPlace={lat:loc.lat(), lng:loc.lng()}; }
-    }); }
-    function setupAutocompleteEdit(){ const e=id('e_address'); if(!e || typeof google==='undefined' || !google.maps?.places) return; if(state.acEdit){ return; }
-      state.acEdit=new google.maps.places.Autocomplete(e,{ componentRestrictions:{ country:['se'] } }); state.acEdit.addListener('place_changed',()=>{
-        const p=state.acEdit.getPlace(); const l=p.geometry?.location; if(l && state.editIndex!=null){ const c=state.customers[state.editIndex]; c.lat=l.lat(); c.lng=l.lng(); persist(); }
-      }); }
-
-    // ======= HELPERS =======
-    function id(x){ return document.getElementById(x); }
-    function show(x){ id(x).classList.remove('hide'); }
-    function hide(x){ id(x).classList.add('hide'); }
-
-    // Boot
-    window.addEventListener('DOMContentLoaded',()=>{
-      renderPriceList('prices','priceSum',tempPrices);
-    });
-    // Gör Maps-callback global
-    window.setupAutocompleteNew = setupAutocompleteNew;
-  </script>
-
-  <!-- GOOGLE MAPS + PLACES (din nyckel inbakad, begränsad till Sverige via autocomplete) -->
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBqrUdXxf3E0HuX408ysi61jTe5I4zmlr4&libraries=places&callback=setupAutocompleteNew"></script>
+/* Init */
+window.addEventListener('load',()=>{
+  $('#app').setAttribute('aria-hidden','true'); $('#gate').style.display='flex';
+  if(localStorage.getItem(VAULT_KEY)) showLogin(); else toOnb1();
+});
+</script>
 </body>
 </html>
